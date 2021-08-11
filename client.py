@@ -6,12 +6,10 @@
 # See the file LICENSE for copying permission.
 
 import logging
-from getpass import getpass
-from argparse import ArgumentParser
 
 import slixmpp
 
-
+logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 class Client(slixmpp.ClientXMPP):
 
     """
@@ -56,10 +54,69 @@ class Client(slixmpp.ClientXMPP):
 
         self.disconnect()
 
-xmpp = Client(args.jid, args.password, args.to, args.message)
-xmpp.register_plugin('xep_0030') # Service Discovery
-xmpp.register_plugin('xep_0199') # XMPP Ping
+# jid = 'test@alumchat.xyz'
+# password = '12345'
+# to= 'testw@alumchat.xyz'
+# message= 'Hola'
 
-# Connect to the XMPP server and start processing XMPP stanzas.
-xmpp.connect()
-xmpp.process(forever=False)
+# xmpp = Client(jid, password, to, message)
+# xmpp.register_plugin('xep_0030') # Service Discovery
+# xmpp.register_plugin('xep_0199') # XMPP Ping
+
+# # Connect to the XMPP server and start processing XMPP stanzas.
+# xmpp.connect()
+# xmpp.process(forever=False)
+
+
+menu = '''
+        1. Iniciar Sesion
+        2. Cerrar Sesion
+        3. Registrar cuenta
+        4. Eliminar cuenta
+        5. Mostrar contactos
+        6. Mostrar usuarios
+        7. Agregar contacto
+        8. Detalles usuario
+        9. Enviar mensaje a usuario
+        10. Enivar mensaje a todos
+        11. Definir presencia
+        12. Salir
+        '''
+
+start = True
+
+while(start):
+    print('-'*25)
+    print(menu)
+    print('-'*25)
+
+    option = input('Eliga una opcion: ')
+
+    if option=='1':
+        print('Iniciar sesion')
+    elif option=='2':
+        print('Cerrar sesion')
+    elif option=='3':
+        print('Registrar cuenta')
+    elif option=='4':
+        print('Eliminar cuenta')
+    elif option=='5':
+        print('Mostrar contactos')
+    elif option=='6':
+        print('Mostrar usarios')
+    elif option=='7':
+        print('Agregar contacto')
+    elif option=='8':
+        print('Detalles usuario')
+    elif option=='9':
+        print('Enviar mensaje a usuario')
+    elif option=='10':
+        print('Enviar mensaje a todos')
+    elif option=='11':
+        print('Definir presencia')
+    elif option=='12':
+        start = False
+    else:
+        print('Opcion invalida')
+
+
