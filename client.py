@@ -6,8 +6,10 @@
 # See the file LICENSE for copying permission.
 
 import logging
+import re
 
 import slixmpp
+from slixmpp.exceptions import IqError, IqTimeout
 
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 class Client(slixmpp.ClientXMPP):
@@ -16,10 +18,11 @@ class Client(slixmpp.ClientXMPP):
     A basic Slixmpp bot that will log in, send a message,
     and then log out.
     """
-
+    
     def __init__(self, jid, password):
         slixmpp.ClientXMPP.__init__(self, jid, password)
-
+        self.to= 'test@alumchat.xyz'
+        self.message= 'Hola'
         # The message we wish to send, and the JID that
         # will receive it.
 
@@ -29,28 +32,82 @@ class Client(slixmpp.ClientXMPP):
         # listen for this event so that we we can initialize
         # our roster.
         self.add_event_handler("session_start", self.start)
+        self.add_event_handler('register', self.signup)
 
     async def start(self, event):
-        """
-        Process the session_start event.
-
-        Typical actions for the session_start event are
-        requesting the roster and broadcasting an initial
-        presence stanza.
-
-        Arguments:
-            event -- An empty dictionary. The session_start
-                     event does not provide any additional
-                     data.
-        """
         self.send_presence()
-        await self.get_roster()
 
-        self.send_message(mto=self.recipient,
-                          mbody=self.msg,
-                          mtype='chat')
+        def send_message():
+            recipient = 'andy@alumchat.xyz'
+            message = 'Hola'
 
-        self.disconnect()
+            self.send_message(mto=recipient, mbody=message, mtype='chat')
+            print('Se envio el mensaje')
+        
+        show = True
+        menu = '''
+        1. Cerrar Sesion
+        2. Eliminar cuenta
+        3. Mostrar contactos
+        4. Mostrar usuarios
+        5. Agregar contacto
+        6. Detalles usuario
+        7. Enviar mensaje a usuario
+        8. Enviar mensaje a todos
+        9. Definir presencia
+        '''
+        while(show):
+            print('-'*20)
+            print(menu)
+            print('-'*20)
+
+            choose = input('Eliga una opcion: ')
+
+            if choose=='1':
+                print('Cerrar sesion')
+                self.disconnect()
+                show = False
+            elif choose=='2':
+                print('Eliminar cuenta')
+            elif choose=='3':
+                print('Mostrar contactos')
+            elif choose=='4':
+                print('Mostrar usuarios')
+            elif choose=='5':
+                print('Agregar contacto')
+            elif choose=='6':
+                print('Detalles usuario')
+            elif choose=='7':
+                print('Enviar mensaje a usuario')
+                send_message()
+            elif choose=='8':
+                print('Enviar mensaje a todos')
+            elif choose=='9':
+                print('Definir presencia')
+            else:
+                print('Opcion invalida')
+
+            await self.get_roster()
+        
+
+    
+    async def signup(self, iq):
+        responce = self.Iq()
+
+        responce['type']='set'
+        responce['register']['username'] = self.boundjid.user
+        responce['register']['password'] = self.password
+
+        try:
+            await responce.send()
+            logging.info("Account created for %s!" % self.boundjid)
+        except IqError as e:
+            logging.error("Could not register account: %s" %
+                    e.iq['error']['text'])
+            self.disconnect()
+        except IqTimeout:
+            logging.error("No response from server.")
+            self.disconnect()
 
 def signup(user, password):
     client = Client(user, password)
@@ -65,12 +122,19 @@ def signup(user, password):
     client.connect()
     client.process()
 
-# jid = 'test@alumchat.xyz'
-# password = '12345'
-# to= 'testw@alumchat.xyz'
-# message= 'Hola'
+def login(username, password):
+    client = Client(username, password)
+    client.register_plugin("xep_0030")
+    client.register_plugin("xep_0199")
 
-# xmpp = Client(jid, password, to, message)
+    client.connect()
+    client.process(forever=False)
+
+# jid = 'pruebaa@alumchat.xyz'
+# password = '12345'
+
+
+# xmpp = Client(jid, password)
 # xmpp.register_plugin('xep_0030') # Service Discovery
 # xmpp.register_plugin('xep_0199') # XMPP Ping
 
@@ -81,17 +145,9 @@ def signup(user, password):
 
 menu = '''
         1. Iniciar Sesion
-        2. Cerrar Sesion
-        3. Registrar cuenta
-        4. Eliminar cuenta
-        5. Mostrar contactos
-        6. Mostrar usuarios
-        7. Agregar contacto
-        8. Detalles usuario
-        9. Enviar mensaje a usuario
-        10. Enivar mensaje a todos
-        11. Definir presencia
-        12. Salir
+        2. Registrar cuenta
+        3. Eliminar cuenta
+        4. Salir
         '''
 
 start = True
@@ -104,35 +160,22 @@ while(start):
     option = input('Eliga una opcion: ')
 
     if option=='1':
-        user = input('Escriba el nombre de usario (nombre@alumchat.xyz): ')
-        password = input('Escriba su contrasena: ')
+        # user = input('Escriba el nombre de usario (nombre@alumchat.xyz): ')
+        # password = input('Escriba su contrasena: ')
+        user='pruebaa@alumchat.xyz'
+        password='12345'
+        login(user, password)
     elif option=='2':
-        print('Cerrar sesion')
-    elif option=='3':
         print('Registrar cuenta')
         #username = input('Escriba el nombre de usario (nombre@alumchat.xyz): ')
         #password = input('Escriba su contrasena: ')
-        username='pruebaa@alumchat.xyz'
+        username='andy@alumchat.xyz'
         password='12345'
         signup(username, password)
 
-    elif option=='4':
+    elif option=='3':
         print('Eliminar cuenta')
-    elif option=='5':
-        print('Mostrar contactos')
-    elif option=='6':
-        print('Mostrar usarios')
-    elif option=='7':
-        print('Agregar contacto')
-    elif option=='8':
-        print('Detalles usuario')
-    elif option=='9':
-        print('Enviar mensaje a usuario')
-    elif option=='10':
-        print('Enviar mensaje a todos')
-    elif option=='11':
-        print('Definir presencia')
-    elif option=='12':
+    elif option=='4':
         start = False
     else:
         print('Opcion invalida')
