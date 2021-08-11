@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-
-# Slixmpp: The Slick XMPP Library
-# Copyright (C) 2010  Nathanael C. Fritz
-# This file is part of Slixmpp.
-# See the file LICENSE for copying permission.
-
 import logging
 import re
 
@@ -32,7 +25,7 @@ class Client(slixmpp.ClientXMPP):
         # listen for this event so that we we can initialize
         # our roster.
         self.add_event_handler("session_start", self.start)
-        self.add_event_handler('register', self.signup)
+        self.add_event_handler('register', self.register)
 
     async def start(self, event):
         self.send_presence()
@@ -41,6 +34,9 @@ class Client(slixmpp.ClientXMPP):
             recipient = 'andy@alumchat.xyz'
             message = 'Hola'
 
+            # recipient = input('Para quien es el mensaje: ')
+            # message = input('Cual es el mensaje: ')
+
             self.send_message(mto=recipient, mbody=message, mtype='chat')
             print('Se envio el mensaje')
         
@@ -48,6 +44,21 @@ class Client(slixmpp.ClientXMPP):
             #contact = input("New contact username: ")
             contact = 'andy@alumchat.xyz'
             self.send_presence_subscription(pto=contact)
+
+        def delete_account():
+            self.register_plugin('xep_0030') # Service Discovery
+            self.register_plugin('xep_0066')
+            self.register_plugin('xep_0199') # xmpp Ping
+            self.register_plugin('xep_0004')
+            self.register_plugin('xep_0077')
+
+            response = self.Iq()
+            response['type'] = 'set'
+            response['from'] = self.boundjid.user
+            response['register']['remove'] = True
+            response.send()
+
+            self.disconnect()
         
         show = True
         menu = '''
@@ -74,6 +85,8 @@ class Client(slixmpp.ClientXMPP):
                 show = False
             elif choose=='2':
                 print('Eliminar cuenta')
+                delete_account()
+                show = False
             elif choose=='3':
                 print('Mostrar contactos')
             elif choose=='4':
@@ -96,8 +109,8 @@ class Client(slixmpp.ClientXMPP):
             await self.get_roster()
         
 
-    
-    async def signup(self, iq):
+    async def register(self, iq):
+
         responce = self.Iq()
 
         responce['type']='set'
@@ -115,13 +128,13 @@ class Client(slixmpp.ClientXMPP):
             logging.error("No response from server.")
             self.disconnect()
 
-def signup(user, password):
+def register(user, password):
     client = Client(user, password)
-    client.register_plugin('xep_0030') # Service Discovery
-    client.register_plugin('xep_0004')
-    client.register_plugin('xep_0199') # xmpp Ping
-    client.register_plugin('xep_0066')
-    client.register_plugin('xep_0077')
+    client.register_plugin("xep_0030")
+    client.register_plugin("xep_0004")
+    client.register_plugin("xep_0199")
+    client.register_plugin("xep_0066")
+    client.register_plugin("xep_0077")
 
     client['xep_0077'].force_registrarion = True
 
@@ -136,24 +149,12 @@ def login(username, password):
     client.connect()
     client.process(forever=False)
 
-# jid = 'pruebaa@alumchat.xyz'
-# password = '12345'
-
-
-# xmpp = Client(jid, password)
-# xmpp.register_plugin('xep_0030') # Service Discovery
-# xmpp.register_plugin('xep_0199') # XMPP Ping
-
-# # Connect to the XMPP server and start processing XMPP stanzas.
-# xmpp.connect()
-# xmpp.process(forever=False)
 
 
 menu = '''
         1. Iniciar Sesion
         2. Registrar cuenta
-        3. Eliminar cuenta
-        4. Salir
+        3. Salir
         '''
 
 start = True
@@ -175,13 +176,10 @@ while(start):
         print('Registrar cuenta')
         #username = input('Escriba el nombre de usario (nombre@alumchat.xyz): ')
         #password = input('Escriba su contrasena: ')
-        username='andy@alumchat.xyz'
+        username='pruebaa@alumchat.xyz'
         password='12345'
-        signup(username, password)
-
+        register(username, password)
     elif option=='3':
-        print('Eliminar cuenta')
-    elif option=='4':
         start = False
     else:
         print('Opcion invalida')
