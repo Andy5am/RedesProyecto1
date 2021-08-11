@@ -29,17 +29,22 @@ class Client(slixmpp.ClientXMPP):
 
     async def start(self, event):
         self.send_presence()
-        await self.get_roster()
+        
 
         def send_message():
-            recipient = 'andy@alumchat.xyz'
+            recipient = 'pruebaa@alumchat.xyz'
             message = 'Hola'
 
             # recipient = input('Para quien es el mensaje: ')
             # message = input('Cual es el mensaje: ')
-
-            self.send_message(mto=recipient, mbody=message, mtype='chat')
-            print('Se envio el mensaje')
+            try:
+                self.send_message(mto=recipient, mbody=message, mtype='chat')
+                print('Se envio el mensaje')
+                logging.info('Message sent')
+            except IqError:
+                logging.error('Error in message')
+            except IqTimeout:
+                logging.error('No server response')
         
         def add_contact():
             #contact = input("New contact username: ")
@@ -78,10 +83,55 @@ class Client(slixmpp.ClientXMPP):
                         show = 'available'
                         if pres['show']:
                             show = pres['show']
-                        print('(',show,')\n')
+                        print('(',show,')')
                         if pres['status']:
-                            print(pres['status'],'\n')
+                            print(pres['status'])
+                    print('\n')
             print('-'*25)
+
+        def show_contact_details():
+            self.get_roster()
+
+            #username = input('Ingrese el usuario del contacto: ')
+            username = 'pruebaa@alumchat.xyz'
+
+            contact = self.client_roster[username]['name']
+            print(contact, username)
+
+        def change_presence():
+
+            loop = True
+            while(loop):
+                print(
+                    '''
+                    1. Available
+                    2. Unavailable
+                    3. Do not disturb
+                    '''
+                )
+                presence = input('Elija un estado: ')
+                if presence=='1':
+                    presence_show = 'chat'
+                    status = 'Available'
+                    loop = False
+                elif presence == '2':
+                    presence_show = 'away'
+                    status = 'Unavailable'
+                    loop = False
+                elif presence=='3':
+                    presence_show = 'dnd'
+                    status = 'Do not Disturb'
+                    loop = False
+                else:
+                    print('Opcion invalida')
+            try:
+                self.send_presence(pshow=presence_show, pstatus=status)
+                logging.info('Presence set')
+            except IqError:
+                logging.error('Error al enviar presencia')
+            except IqTimeout:
+                logging.error('No hubo respuesta del servidor')
+
         
         show = True
         menu = '''
@@ -90,7 +140,7 @@ class Client(slixmpp.ClientXMPP):
         3. Mostrar contactos
         4. Mostrar usuarios
         5. Agregar contacto
-        6. Detalles usuario
+        6. Detalles contacto
         7. Enviar mensaje a usuario
         8. Enviar mensaje a todos
         9. Definir presencia
@@ -112,6 +162,7 @@ class Client(slixmpp.ClientXMPP):
                 show = False
             elif choose=='3':
                 print('Mostrar contactos')
+                await self.get_roster()
                 show_contacts()
             elif choose=='4':
                 print('Mostrar usuarios')
@@ -119,7 +170,8 @@ class Client(slixmpp.ClientXMPP):
                 print('Agregar contacto')
                 add_contact()
             elif choose=='6':
-                print('Detalles usuario')
+                print('Detalles contacto')
+
             elif choose=='7':
                 print('Enviar mensaje a usuario')
                 send_message()
@@ -127,8 +179,11 @@ class Client(slixmpp.ClientXMPP):
                 print('Enviar mensaje a todos')
             elif choose=='9':
                 print('Definir presencia')
+                change_presence()
             else:
                 print('Opcion invalida')
+
+            await self.get_roster()
 
             
         
@@ -193,7 +248,7 @@ while(start):
     if option=='1':
         # user = input('Escriba el nombre de usario (nombre@alumchat.xyz): ')
         # password = input('Escriba su contrasena: ')
-        user='pruebaa@alumchat.xyz'
+        user='andy@alumchat.xyz'
         password='12345'
         login(user, password)
     elif option=='2':
