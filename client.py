@@ -29,6 +29,7 @@ class Client(slixmpp.ClientXMPP):
 
     async def start(self, event):
         self.send_presence()
+        await self.get_roster()
 
         def send_message():
             recipient = 'andy@alumchat.xyz'
@@ -59,6 +60,28 @@ class Client(slixmpp.ClientXMPP):
             response.send()
 
             self.disconnect()
+
+        def show_contacts():
+            groups = self.client_roster.groups()
+            
+            for group in groups:
+                print('-'*25)
+                for jid in groups[group]:
+                    name = self.client_roster[jid]['name']
+                    if self.client_roster[jid]['name']:
+                        print(name, ' (', jid,')')
+                    else:
+                        print(jid)
+
+                    connections = self.client_roster.presence(jid)
+                    for res, pres in connections.items():
+                        show = 'available'
+                        if pres['show']:
+                            show = pres['show']
+                        print('(',show,')\n')
+                        if pres['status']:
+                            print(pres['status'],'\n')
+            print('-'*25)
         
         show = True
         menu = '''
@@ -89,6 +112,7 @@ class Client(slixmpp.ClientXMPP):
                 show = False
             elif choose=='3':
                 print('Mostrar contactos')
+                show_contacts()
             elif choose=='4':
                 print('Mostrar usuarios')
             elif choose=='5':
@@ -106,7 +130,7 @@ class Client(slixmpp.ClientXMPP):
             else:
                 print('Opcion invalida')
 
-            await self.get_roster()
+            
         
 
     async def register(self, iq):
