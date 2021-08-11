@@ -44,6 +44,11 @@ class Client(slixmpp.ClientXMPP):
             self.send_message(mto=recipient, mbody=message, mtype='chat')
             print('Se envio el mensaje')
         
+        def add_contact():
+            #contact = input("New contact username: ")
+            contact = 'andy@alumchat.xyz'
+            self.send_presence_subscription(pto=contact)
+        
         show = True
         menu = '''
         1. Cerrar Sesion
@@ -75,6 +80,7 @@ class Client(slixmpp.ClientXMPP):
                 print('Mostrar usuarios')
             elif choose=='5':
                 print('Agregar contacto')
+                add_contact()
             elif choose=='6':
                 print('Detalles usuario')
             elif choose=='7':
