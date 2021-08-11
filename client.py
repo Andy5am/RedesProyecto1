@@ -17,13 +17,11 @@ class Client(slixmpp.ClientXMPP):
     and then log out.
     """
 
-    def __init__(self, jid, password, recipient, message):
+    def __init__(self, jid, password):
         slixmpp.ClientXMPP.__init__(self, jid, password)
 
         # The message we wish to send, and the JID that
         # will receive it.
-        self.recipient = recipient
-        self.msg = message
 
         # The session_start event will be triggered when
         # the bot establishes its connection with the server
@@ -53,6 +51,19 @@ class Client(slixmpp.ClientXMPP):
                           mtype='chat')
 
         self.disconnect()
+
+def signup(user, password):
+    client = Client(user, password)
+    client.register_plugin('xep_0030') # Service Discovery
+    client.register_plugin('xep_0004')
+    client.register_plugin('xep_0199') # xmpp Ping
+    client.register_plugin('xep_0066')
+    client.register_plugin('xep_0077')
+
+    client['xep_0077'].force_registrarion = True
+
+    client.connect()
+    client.process()
 
 # jid = 'test@alumchat.xyz'
 # password = '12345'
@@ -93,11 +104,18 @@ while(start):
     option = input('Eliga una opcion: ')
 
     if option=='1':
-        print('Iniciar sesion')
+        user = input('Escriba el nombre de usario (nombre@alumchat.xyz): ')
+        password = input('Escriba su contrasena: ')
     elif option=='2':
         print('Cerrar sesion')
     elif option=='3':
         print('Registrar cuenta')
+        #username = input('Escriba el nombre de usario (nombre@alumchat.xyz): ')
+        #password = input('Escriba su contrasena: ')
+        username='pruebaa@alumchat.xyz'
+        password='12345'
+        signup(username, password)
+
     elif option=='4':
         print('Eliminar cuenta')
     elif option=='5':
