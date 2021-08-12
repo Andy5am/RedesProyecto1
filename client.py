@@ -1,5 +1,5 @@
 import logging
-
+import base64
 import slixmpp
 from slixmpp.exceptions import IqError, IqTimeout
 
@@ -23,7 +23,6 @@ class Client(slixmpp.ClientXMPP):
         self.add_event_handler('register', self.register)
 
         self.add_event_handler("message", self.get_message)
-        self.add_event_handler("groupchat_message", self.muc_message)
         self.add_event_handler("chatstate_composing", self.receive_notification)
 
     async def start(self, event):
@@ -49,72 +48,88 @@ class Client(slixmpp.ClientXMPP):
         
         show = True
         menu = '''
-        1. Cerrar Sesion
-        2. Eliminar cuenta
-        3. Mostrar contactos
-        4. Ver respuestas
-        5. Agregar contacto
-        6. Detalles contacto
-        7. Enviar mensaje privado
-        8. Enviar mensaje a grupo
-        9. Definir presencia
+        1. Log Out
+        2. Delte Account
+        3. Show contacts
+        4. Contact Details
+        5. Add Contact
+        6. Send Private Message
+        7. Join Group
+        8. Send Group Message
+        9. Define Presence
+        10. Chat Answers
         '''
         while(show):
             print('-'*50)
             print(menu)
             print('-'*50)
 
-            choose = input('Eliga una opcion: ')
+            choose = input('Choose an option: ')
 
             if choose == '1':
-                print('Cerrar sesion')
+                print('Log Out')
                 self.disconnect()
                 show = False
             elif choose == '2':
-                print('Eliminar cuenta')
+                print('Delete Account')
                 delete_account()
                 show = False
             elif choose == '3':
-                print(GREEN+'Mostrar contactos'+ENDC)
+                print(GREEN+'Show Contacts'+ENDC)
                 self.show_contacts()
             elif choose == '4':
-                print('Ver respuestas')
-                print('Respuesta')
+                print(GREEN+'Contact Details'+ENDC)
+                self.show_contact_details()
             elif choose == '5':
-                print('Agregar contacto')
+                print('Add Contact')
                 self.add_contact()
             elif choose == '6':
-                print('Detalles contacto')
-                self.show_contact_details()
-            elif choose == '7':
-                print('Enviar mensaje a usuario')
+                print('Send Private Message')
                 self.private_message()
+            elif choose == '7':
+                print('Join Group')
+                self.join_group()
             elif choose == '8':
-                print('Enviar mensaje a grupo')
+                print('Send Group Message')
                 self.send_group_message()
             elif choose == '9':
-                print('Definir presencia')
+                print('Define Presence')
                 self.change_presence()
+            elif choose == '10':
+                print('Chat Answers')
             else:
-                print('Opcion invalida')
+                print('Invalid Option')
 
             await self.get_roster()
 
+    def invite_group(self):
+        room = input("Write the group name: ")
+        username = input("Who do you wanna invite: ")
+        self.plugin['xep_0045'].invite(room=room+'@conference.alumchat.xyz', jid=username)
+
+    def join_group(self):
+        #self.plugin['xep_0045'].join_muc("Prueba@conference.redes2020.xyz", "pruebaaa")
+        room = input("Write the group name: ")
+        nickname = input("write your nickname: ")
+        self.plugin['xep_0045'].join_muc(room+"@conference.alumchat.xyz", nickname)
+        #self.plugin['xep_0045'].set_affiliation(room="hola@conference.alumchat.xyz",  affiliation='member',jid=self.boundjid.full,)
     def send_group_message(self):
+        
         #self.plugin['xep_0045'].join_muc('grupo', 'prueba')
         #group_name = input('Escriba el nombre del grupo: ')
-        group_name = 'Prueba'
-        #message = input('Escriba el mensaje: ')
-        message = 'hola'
-        self.send_message(mto=group_name, mbody=message, mtype='groupchat')
+        #group_name = 'hola@conference.alumchat.xyz'
+        room = input("Write the group name: ")
+        message = input('Write your message: ')
+        #message = 'hola'
+        self.send_message(mto=room+"@conference.alumchat.xyz", mbody=message, mtype='groupchat')
     
     def private_message(self):
-        recipient = 'andy@alumchat.xyz'
+        #recipient = 'andy@alumchat.xyz'
         #message = 'Hola'
 
+        recipient = input('Who are you sending the message to: ')
+        message = input('Write your message: ')
         self.send_notification(recipient, "composing")
-        # recipient = input('Para quien es el mensaje: ')
-        message = input('Cual es el mensaje: ')
         try:
             self.send_notification(recipient, "paused")
             self.send_message(mto=recipient, mbody=message, mtype='chat')
@@ -129,8 +144,8 @@ class Client(slixmpp.ClientXMPP):
     def show_contact_details(self):
         self.get_roster()
 
-        #username = input('Ingrese el usuario del contacto: ')
-        username = 'andy@alumchat.xyz'
+        username = input('Write the username: ')
+        #username = 'andy@alumchat.xyz'
 
         contact = self.client_roster[username]
         print('-'*40)
@@ -143,7 +158,7 @@ class Client(slixmpp.ClientXMPP):
             print(BLUE+'Estado: Offline'+ENDC)
         else:
             for client, status in connections.items():
-                print('Estado: ',status['status'])
+                print(BLUE+'Estado: '+CYAN,status['status'],ENDC)
 
         print('-'*40)
 
@@ -205,14 +220,6 @@ class Client(slixmpp.ClientXMPP):
             logging.error('No hubo respuesta del servidor')
 
 
-    def muc_message(self, message):
-        sender = str(message['mucnick']).split('/')
-        print('*'*50)
-        print('Mensaje de: ',sender[0])
-        print(message['body'])
-        print('*'*50)
-
-
     def get_message(self, message):
         sender = str(message['from']).split('/')
         print('*'*50)
@@ -240,6 +247,10 @@ class Client(slixmpp.ClientXMPP):
         print(BLUE,sender[0],CYAN+ 'is typing',ENDC)
         print('*'*50)
 
+    def sendFile(self):
+        with open('./text.txt') as img:
+            image = base64.b64encode(img.read()).decode('utf-8')
+        self.send_message(mto="andy@alumchat.xyz", mbody=image, msubject='file', mtype='chat')
 
     async def register(self, iq):
 
@@ -251,13 +262,12 @@ class Client(slixmpp.ClientXMPP):
 
         try:
             await responce.send()
-            logging.info("Account created for %s!" % self.boundjid)
+            logging.info("Account created")
         except IqError as e:
-            logging.error("Could not register account: %s" %
-                    e.iq['error']['text'])
+            logging.error("Could not register account")
             self.disconnect()
         except IqTimeout:
-            logging.error("No response from server.")
+            logging.error("No response from server")
             self.disconnect()
 
 def register(user, password):
@@ -282,44 +292,46 @@ def login(username, password):
     client.register_plugin("xep_0085") # Chat State Notifications
     client.register_plugin('xep_0128') # Service Discovery Extensions
     client.register_plugin("xep_0199") # XMPP Ping
-    client.register_plugin('xep_0045') # Multi-User-Chat
+    client.register_plugin('xep_0045')
 
     client.connect()
     client.process(forever=False)
 
 
-
+#Start Menu
 menu = '''
-        1. Iniciar Sesion
-        2. Registrar cuenta
-        3. Salir
+        1. Log In
+        2. Sign Up
+        3. Quit
         '''
 
+#Start menu loop
 start = True
 
 while(start):
-    print('*'*25)
+    print('*'*50)
     print(menu)
-    print('*'*25)
+    print('*'*50)
 
-    option = input('Eliga una opcion: ')
+    option = input('Choose an option: ')
 
-    if option=='1':
-        # user = input('Escriba el nombre de usario (nombre@alumchat.xyz): ')
-        # password = input('Escriba su contrasena: ')
-        user='pruebaa@alumchat.xyz'
-        password='12345'
+    if option=='1': #Log In option
+        print('Log In')
+        user = input('Write your username (nombre@alumchat.xyz): ')
+        password = input('Write your password: ')
+        # user='andy@alumchat.xyz'
+        # password='12345'
         login(user, password)
-    elif option=='2':
-        print('Registrar cuenta')
-        #username = input('Escriba el nombre de usario (nombre@alumchat.xyz): ')
-        #password = input('Escriba su contrasena: ')
-        username='pruebaa@alumchat.xyz'
-        password='12345'
+    elif option=='2': #Sign Up option
+        print('Sign Up')
+        username = input('Write your username (nombre@alumchat.xyz): ')
+        password = input('Write your password: ')
+        # username='pruebaa@alumchat.xyz'
+        # password='12345'
         register(username, password)
-    elif option=='3':
+    elif option=='3': #Quit option
         start = False
-    else:
-        print('Opcion invalida')
+    else: #Wrong input
+        print(RED+'Invalid Option'+ENDC)
 
 
