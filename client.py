@@ -29,14 +29,18 @@ class Client(slixmpp.ClientXMPP):
 
     async def start(self, event):
         self.send_presence()
-        
+        await self.get_roster()
 
         def send_message():
             recipient = 'pruebaa@alumchat.xyz'
-            message = 'Hola'
+            #message = 'Hola'
 
+            notification = self.Message()
+            notification['chat-state'] = 'composing'
+            notification['to'] = recipient
+            notification.send()
             # recipient = input('Para quien es el mensaje: ')
-            # message = input('Cual es el mensaje: ')
+            message = input('Cual es el mensaje: ')
             try:
                 self.send_message(mto=recipient, mbody=message, mtype='chat')
                 print('Se envio el mensaje')
@@ -95,8 +99,20 @@ class Client(slixmpp.ClientXMPP):
             #username = input('Ingrese el usuario del contacto: ')
             username = 'pruebaa@alumchat.xyz'
 
-            contact = self.client_roster[username]['name']
-            print(contact, username)
+            contact = self.client_roster[username]
+            print('-'*40)
+            if contact['name']:
+                print('Nombre: ',contact['name'],'\n')
+            print('Username: ',username,'\n')
+            connections = self.client_roster.presence(username)
+
+            if connections=={}:
+                print('Estado: Offline')
+            else:
+                for client, status in connections.items():
+                    print('Estado: ',status['status'])
+
+            print('-'*40)
 
         def change_presence():
 
@@ -162,7 +178,6 @@ class Client(slixmpp.ClientXMPP):
                 show = False
             elif choose=='3':
                 print('Mostrar contactos')
-                await self.get_roster()
                 show_contacts()
             elif choose=='4':
                 print('Mostrar usuarios')
@@ -171,7 +186,7 @@ class Client(slixmpp.ClientXMPP):
                 add_contact()
             elif choose=='6':
                 print('Detalles contacto')
-
+                show_contact_details()
             elif choose=='7':
                 print('Enviar mensaje a usuario')
                 send_message()
