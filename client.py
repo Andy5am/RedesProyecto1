@@ -1,34 +1,30 @@
 import logging
-import re
 
 import slixmpp
 from slixmpp.exceptions import IqError, IqTimeout
 
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
-class Client(slixmpp.ClientXMPP):
 
-    """
-    A basic Slixmpp bot that will log in, send a message,
-    and then log out.
-    """
+RED   = "\033[1;31m"  
+BLUE  = "\033[1;34m"
+CYAN  = "\033[1;36m"
+GREEN = "\033[0;32m"
+RESET = "\033[0;0m"
+BOLD    = "\033[;1m"
+REVERSE = "\033[;7m"
+ENDC = '\033[0m'
+
+class Client(slixmpp.ClientXMPP):
     
     def __init__(self, jid, password):
         slixmpp.ClientXMPP.__init__(self, jid, password)
-        self.to= 'test@alumchat.xyz'
-        self.message= 'Hola'
-        # The message we wish to send, and the JID that
-        # will receive it.
 
-        # The session_start event will be triggered when
-        # the bot establishes its connection with the server
-        # and the XML streams are ready for use. We want to
-        # listen for this event so that we we can initialize
-        # our roster.
         self.add_event_handler("session_start", self.start)
         self.add_event_handler('register', self.register)
 
         self.add_event_handler("message", self.get_message)
         self.add_event_handler("groupchat_message", self.muc_message)
+        self.add_event_handler("chatstate_composing", self.receive_notification)
 
     async def start(self, event):
         self.send_presence()
@@ -49,9 +45,6 @@ class Client(slixmpp.ClientXMPP):
 
             self.disconnect()
         
-        def join_group():
-            self.plugin['xep_0045'].join_muc('Prueba', 'pruebaa')
-        
 
         
         show = True
@@ -59,47 +52,47 @@ class Client(slixmpp.ClientXMPP):
         1. Cerrar Sesion
         2. Eliminar cuenta
         3. Mostrar contactos
-        4. Unirse a grupo
+        4. Ver respuestas
         5. Agregar contacto
         6. Detalles contacto
-        7. Enviar mensaje a usuario
+        7. Enviar mensaje privado
         8. Enviar mensaje a grupo
         9. Definir presencia
         '''
         while(show):
-            print('-'*20)
+            print('-'*50)
             print(menu)
-            print('-'*20)
+            print('-'*50)
 
             choose = input('Eliga una opcion: ')
 
-            if choose=='1':
+            if choose == '1':
                 print('Cerrar sesion')
                 self.disconnect()
                 show = False
-            elif choose=='2':
+            elif choose == '2':
                 print('Eliminar cuenta')
                 delete_account()
                 show = False
-            elif choose=='3':
-                print('Mostrar contactos')
+            elif choose == '3':
+                print(GREEN+'Mostrar contactos'+ENDC)
                 self.show_contacts()
-            elif choose=='4':
-                print('Unir a grupo')
-                join_group()
-            elif choose=='5':
+            elif choose == '4':
+                print('Ver respuestas')
+                print('Respuesta')
+            elif choose == '5':
                 print('Agregar contacto')
                 self.add_contact()
-            elif choose=='6':
+            elif choose == '6':
                 print('Detalles contacto')
                 self.show_contact_details()
-            elif choose=='7':
+            elif choose == '7':
                 print('Enviar mensaje a usuario')
                 self.private_message()
-            elif choose=='8':
+            elif choose == '8':
                 print('Enviar mensaje a grupo')
                 self.send_group_message()
-            elif choose=='9':
+            elif choose == '9':
                 print('Definir presencia')
                 self.change_presence()
             else:
@@ -142,12 +135,12 @@ class Client(slixmpp.ClientXMPP):
         contact = self.client_roster[username]
         print('-'*40)
         if contact['name']:
-            print('Nombre: ',contact['name'],'\n')
-        print('Username: ',username,'\n')
+            print(BLUE+'Nombre: '+CYAN, contact['name'],ENDC+'\n')
+        print(BLUE+'Username: '+CYAN,username,ENDC+'\n')
         connections = self.client_roster.presence(username)
 
         if connections=={}:
-            print('Estado: Offline')
+            print(BLUE+'Estado: Offline'+ENDC)
         else:
             for client, status in connections.items():
                 print('Estado: ',status['status'])
@@ -162,20 +155,20 @@ class Client(slixmpp.ClientXMPP):
             for username in groups[group]:
                 name = self.client_roster[username]['name']
                 if name:
-                    print('Nombre: ',name)
-                    print('Usuaio: ',username)
+                    print(BLUE+'Nombre: ',name,ENDC)
+                    print(BLUE+'Usuario: '+CYAN,username,ENDC)
                 else:
-                    print('Usurio: ',username)
+                    print(BLUE+'Usuario: '+CYAN,username,ENDC)
 
                 connections = self.client_roster.presence(username)
                 for client, status in connections.items():
-                    print('Estado: ',status['status'])
+                    print(BLUE+'Estado: '+CYAN,status['status'],ENDC)
                 print('\n')
         print('-'*25)
 
     def add_contact(self):
-        #contact = input("New contact username: ")
-        contact = 'andy@alumchat.xyz'
+        contact = input("New contact username: ")
+        #contact = 'andy@alumchat.xyz'
         self.send_presence_subscription(pto=contact)
 
     def change_presence(self):
@@ -223,8 +216,8 @@ class Client(slixmpp.ClientXMPP):
     def get_message(self, message):
         sender = str(message['from']).split('/')
         print('*'*50)
-        print('Mensaje de: ',sender[0])
-        print(message['body'])
+        print(BLUE+'Mensaje de: '+CYAN,sender[0],ENDC)
+        print(CYAN,message['body'],ENDC)
         print('*'*50)
             
     def send_notification(self, recipient, state):
@@ -239,6 +232,13 @@ class Client(slixmpp.ClientXMPP):
             logging.error('Problema con notificacion')
         except IqTimeout:
             logging.error('Problema en el servidor')
+        
+    def receive_notification(self, chatstate):
+        # Recibir notificaciones
+        sender = str(chatstate['from']).split('/')
+        print('*'*50)
+        print(BLUE,sender[0],CYAN+ 'is typing',ENDC)
+        print('*'*50)
 
 
     async def register(self, iq):
