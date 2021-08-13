@@ -2,7 +2,7 @@ import logging
 import slixmpp
 from slixmpp.exceptions import IqError, IqTimeout
 
-logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
+#logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 #Color
 RED   = "\033[1;31m"  
@@ -90,6 +90,7 @@ class Client(slixmpp.ClientXMPP):
             elif choose == '10':
                 print('Send File')
                 await self.send_file()
+                print(GREEN+'File Sent'+ENDC)
             elif choose == '11':
                 print(GREEN+'Chat Answers'+ENDC)
             else:
@@ -248,11 +249,11 @@ class Client(slixmpp.ClientXMPP):
             notification["to"] = recipient
 
             notification.send()
-            print(GREEN+'Se envio la notificacion'+ENDC)
+            print(GREEN+'Notification sent'+ENDC)
         except IqError:
-            print(RED+'Problema con notificacion'+ENDC)
+            print(RED+'Notification error'+ENDC)
         except IqTimeout:
-            print(RED+'Problema en el servidor'+ENDC)
+            print(RED+'Server error'+ENDC)
     
     #Function when you receive a notification
     def receive_notification(self, chatstate):
@@ -280,8 +281,9 @@ class Client(slixmpp.ClientXMPP):
 
     async def send_file(self):
         domain=None
-        recipient = 'andy@alumchat.xyz'
-        filename='text.txt'
+        print('To send the file you need to have it in the same directory where you have this project')
+        recipient = input('Who are you sending the message to (user@alumchat.xyz): ')
+        filename = input('Write the file name:')
         try:
             url = await self['xep_0363'].upload_file(
                 filename, domain=domain, timeout=10
