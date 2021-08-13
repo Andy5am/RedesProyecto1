@@ -2,7 +2,7 @@ import logging
 import slixmpp
 from slixmpp.exceptions import IqError, IqTimeout
 
-#logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
+logging.basicConfig(level=logging.DEBUG, format="%(levelname)-8s %(message)s")
 
 #Color
 RED   = "\033[1;31m"  
@@ -42,7 +42,8 @@ class Client(slixmpp.ClientXMPP):
         7. Join Group
         8. Send Group Message
         9. Define Presence
-        10. Chat Answers
+        10. Send File
+        11. Chat Answers
         '''
         
         #Loop for menu options
@@ -62,8 +63,8 @@ class Client(slixmpp.ClientXMPP):
                 show = False
             elif choose == '2':
                 print('Delete Account')
-                self.delete_account()
                 show = False
+                self.delete_account()
                 print(GREEN+'Account Deleted'+ENDC)
             elif choose == '3':
                 print(GREEN+'Show Contacts'+ENDC)
@@ -87,6 +88,9 @@ class Client(slixmpp.ClientXMPP):
                 print('Define Presence')
                 self.change_presence()
             elif choose == '10':
+                print('Send File')
+                await self.send_file()
+            elif choose == '11':
                 print(GREEN+'Chat Answers'+ENDC)
             else:
                 print(RED+'Invalid Option'+ENDC)
@@ -127,7 +131,6 @@ class Client(slixmpp.ClientXMPP):
         self.send_notification(recipient, "composing")
         message = input('Write your message: ')
         try:
-            self.send_notification(recipient, "paused")
             self.send_message(mto=recipient, mbody=message, mtype='chat')
             print(GREEN+'Se envio el mensaje'+ENDC)
         except IqError:
@@ -275,6 +278,24 @@ class Client(slixmpp.ClientXMPP):
             print(RED+"No response from server"+ENDC)
             self.disconnect()
 
+    async def send_file(self):
+        domain=None
+        recipient = 'andy@alumchat.xyz'
+        filename='text.txt'
+        try:
+            url = await self['xep_0363'].upload_file(
+                filename, domain=domain, timeout=10
+            )
+        except IqTimeout:
+            raise TimeoutError('Could not send message in time')
+        html = (
+            f'<body xmlns="http://www.w3.org/1999/xhtml">'
+            f'<a href="{url}">{url}</a></body>'
+        )
+        message = self.make_message(mto=recipient, mbody=url, mhtml=html)
+        message['oob']['url'] = url
+        message.send()
+
 #Function to register a new account from the main menu
 def register(user, password):
     client = Client(user, password)
@@ -287,6 +308,7 @@ def register(user, password):
     client.register_plugin("xep_0085") # Chat State Notifications
     client.register_plugin('xep_0128') # Service Discovery Extensions
     client.register_plugin('xep_0045') # Multi user chat
+    client.register_plugin('xep_0363') # Send file
 
     client['xep_0077'].force_registrarion = True
 
@@ -304,6 +326,7 @@ def login(username, password):
     client.register_plugin('xep_0128') # Service Discovery Extensions
     client.register_plugin("xep_0199") # XMPP Ping
     client.register_plugin('xep_0045') # Multi user chat
+    client.register_plugin('xep_0363') # Send file
 
     client.connect()
     client.process(forever=False)
