@@ -138,7 +138,7 @@ class Client(slixmpp.ClientXMPP):
     #Function to show the detail from a specific contact
     def show_contact_details(self):
         self.get_roster()
-        username = input('Write the username: ')
+        username = input('Write the username (user@alumchat.xyz): ')
 
         contact = self.client_roster[username]
         print('*'*50)
@@ -178,7 +178,7 @@ class Client(slixmpp.ClientXMPP):
 
     #Function to add a contact
     def add_contact(self):
-        contact = input("New contact username: ")
+        contact = input("New contact username (user@alumchat.xyz): ")
         try:
             self.send_presence_subscription(pto=contact)
             print(GREEN+'Contact Added'+ENDC)
