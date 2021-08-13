@@ -48,9 +48,10 @@ class Client(slixmpp.ClientXMPP):
         #Loop for menu options
         show = True
         while(show):
-            print('-'*50)
+            print('*'*50)
+            print('Bienvenido ',self.jid)
             print(menu)
-            print('-'*50)
+            print('*'*50)
 
             choose = input('Choose an option: ')
 
@@ -162,16 +163,17 @@ class Client(slixmpp.ClientXMPP):
             print('*'*50)
             for username in groups[group]:
                 name = self.client_roster[username]['name']
-                if name:
-                    print(BLUE+'Nombre: ',name,ENDC)
-                    print(BLUE+'Usuario: '+CYAN,username,ENDC)
-                else:
-                    print(BLUE+'Usuario: '+CYAN,username,ENDC)
+                if username != self.jid:
+                    if name:
+                        print(BLUE+'Nombre: ',name,ENDC)
+                        print(BLUE+'Usuario: '+CYAN,username,ENDC)
+                    else:
+                        print(BLUE+'Usuario: '+CYAN,username,ENDC)
 
-                connections = self.client_roster.presence(username)
-                for client, status in connections.items():
-                    print(BLUE+'Estado: '+CYAN,status['status'],ENDC)
-                print('\n')
+                    connections = self.client_roster.presence(username)
+                    for client, status in connections.items():
+                        print(BLUE+'Estado: '+CYAN,status['status'],ENDC)
+                    print('\n')
         print('*'*50)
 
     #Function to add a contact
