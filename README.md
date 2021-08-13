@@ -17,6 +17,7 @@ The functionalities implemented are:<br/>
 * Send group messages<br/>
 * Change a user status<br/>
 * Send and receive notification<br/>
+* Send/ and receive file<br/>
 
 ## Installation and Usage
 **Follow these steps to run the client:**<br/>
@@ -24,8 +25,14 @@ The functionalities implemented are:<br/>
 pip install slixmpp
 ```
 ```bash
+pip install aiohttp
+```
+```bash
 python client.py
 ```
 ### Important
-Sometime the connection to the server can be difficult.
+
+The send file funnctionality only works if you use python 3.7 (maybe in lower versions too), 3.8 and above doesn't work.
+
+Sometimes the connection to the server can be difficult.
 So if you log in or sign up and nothing shows up after 10 second end the program and run it again.
